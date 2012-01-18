@@ -1,7 +1,10 @@
 #ifndef MINESWEEPER_H
 #define MINESWEEPER_H
 
+#include <algorithm>
 #include <vector>
+#include <queue>
+#include "header.h"
 
 class Minesweeper
 {
@@ -14,13 +17,45 @@ class Minesweeper
 	 * Of cource, this class should implement some other privaete 
 	 * auxiliary functions, such as DFS.
 	 */
+public:
+
+	class t_cell
+	{
+	public: 
+		static const int cMine = -1,
+						  cEmpty = 0;
+		coord x, y;
+		int type;
+		t_cell(coord, coord, int);
+	};
 	 
 private:
-	typedef std :: vector<std :: vector<int> > t_field;
+
+	static const int cMine = -1;
 	
-	t_field field;	// mines/numbers field
-	t_field mark; 	// marks field for graph search algorithms
+	//state variables
+	static const int stUnopened = 0;
+	static const int stOpened = 1;
+	static const int stMine = 2;
+	static const int stInqueue = 3;
 	
+	
+	size_t width, height, mines, turn;
+	bool isGenerated;
+	
+	std :: vector<std :: vector<int> > field;
+	std :: vector<std :: vector<int> > state;
+	
+	void generateField(coord, coord);
+	
+public:
+	
+	Minesweeper ();
+	
+	void startGame(size_t, size_t, size_t);
+	std :: vector<t_cell> makeMove(t_cell);
+	
+	void printField();
 	
 };
 
