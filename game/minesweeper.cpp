@@ -11,7 +11,7 @@
  * @date 2011, Jan 18
  * @author Ivan Smirnov
  */
-Minesweeper :: t_cell :: t_cell (coord _x, coord _y, int _type)
+Minesweeper :: t_cell :: t_cell (coord _x, coord _y, bool _type)
 {
 	x = _x;
 	y = _y;
@@ -38,6 +38,7 @@ void Minesweeper :: startGame (size_t _width, size_t _height, size_t _mines)
 	width = _width;
 	height = _height;
 	mines = _mines;
+	opened = width * height - mines;
 	turn = 0;
 	isGenerated = false;
 	
@@ -83,6 +84,32 @@ void Minesweeper :: generateField (coord moveX, coord moveY)
 	}
 }
 
+t_field Minesweeper :: getPicture()
+{
+	t_field result(height, std :: vector<char> (height, 0));
+	
+	for (coord i = 0; i < height; i++)
+		for (coord j = 0; j < width; j++)
+			switch(state[i][j])
+			{
+				case stUnopened:
+					result[i][j] = '.';
+					break;
+				case stMine:
+					result[i][j] = '*';
+					break;
+				case stOpened:
+					if (field[i][j] == 0)
+						result[i][j] = ' ';
+					else
+						result[i][j] = field[i][j] + '0';
+					break;
+						
+			}
+			
+	return result;
+}
+
 /**
  * @brief Given cell, performs a click at given coordinates
  * @note On first turn this function also generates the field
@@ -95,11 +122,10 @@ void Minesweeper :: generateField (coord moveX, coord moveY)
  * @date 2012, Jan 18
  * @author Ivan Smirnov
  */
-std :: vector<Minesweeper :: t_cell> Minesweeper :: makeMove (t_cell cell)
+int Minesweeper :: makeMove (t_cell cell)
 {
 	m_assert(cell.x >= 0 && cell.x < height, x coordinate out ot bound);
 	m_assert(cell.y >= 0 && cell.y < width, y coordinate out ot bound);
-	m_assert(cell.type == cell.cMine || cell.type == cell.cEmpty, wrong request type);
 	
 	if (cell.type == cell.cEmpty && !isGenerated)
 		generateField(cell.x, cell.y);
@@ -109,20 +135,33 @@ std :: vector<Minesweeper :: t_cell> Minesweeper :: makeMove (t_cell cell)
 	{
 		switch (state[cell.x][cell.y])
 		{
-			case stUnopened: state[cell.x][cell.y] = stMine; break;
-			case stOpened: break;
-			case stMine: state[cell.x][cell.y] = stUnopened; break;
+			case stUnopened: 
+				state[cell.x][cell.y] = stMine;
+				break;
+			case stOpened:
+				break;
+			case stMine:
+				state[cell.x][cell.y] = stUnopened;
+			break;			
 		}
+		return cContinue;
 	}
 	else
 	{
 		switch (state[cell.x][cell.y])
 		{
-			case stOpened: break;
-			case stMine: break;
+			case stOpened:
+				break;
+			case stMine:
+				break;
 			case stUnopened:
 				if (field[cell.x][cell.y] == cMine)
-					return std :: vector<t_cell> (1, t_cell(cell.x, cell.y, t_cell :: cMine));
+				{
+					for (coord i = 0; i < width; i++)
+						for (coord j = 0; j < width; j++)
+							state[i][j] = field[i][j] == cMine ? stMine : stOpened;
+					return cLose;
+				}
 				else
 				{
 					std :: queue<std :: pair<coord, coord> > q;
@@ -132,8 +171,8 @@ std :: vector<Minesweeper :: t_cell> Minesweeper :: makeMove (t_cell cell)
 					{
 						auto t = q.front();
 						q.pop();
-						result.push_back(t_cell(t.first, t.second, field[t.first][t.second]));
 						state[t.first][t.second] = stOpened;
+						opened--;
 						if (field[t.first][t.second] != 0)
 							continue;
 						for (auto dx: {0, 0, -1, 1})
@@ -151,15 +190,31 @@ std :: vector<Minesweeper :: t_cell> Minesweeper :: makeMove (t_cell cell)
 								}
 							}
 					}
-					return result;
 				}
 				break;
 		}
+		if (opened != 0)
+			return cContinue;
+		for (coord i = 0; i < width; i++)
+			for (coord j = 0; j < width; j++)
+				state[i][j] = field[i][j] == cMine ? stMine : stOpened;
+		return cWin;
 	}
-	return std :: vector<t_cell> (0, t_cell(0,0,0));
+	m_assert(0, non-reachable position);
 }
 
 void Minesweeper :: printField()
 {
 	writeField(field);
+}
+void Minesweeper :: printPicture(std :: ostream& cout)
+{
+	auto t = getPicture();
+	for (auto i: t)
+	{
+		for (auto j: i)
+			cout << j;
+		cout << std :: endl;
+	}
+	cout << std :: endl;
 }

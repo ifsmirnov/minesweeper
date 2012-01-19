@@ -22,11 +22,11 @@ public:
 	class t_cell
 	{
 	public: 
-		static const int cMine = -1,
+		static const bool cMine = 1,
 						  cEmpty = 0;
 		coord x, y;
-		int type;
-		t_cell(coord, coord, int);
+		bool type;
+		t_cell(coord, coord, bool);
 	};
 	 
 private:
@@ -41,6 +41,7 @@ private:
 	
 	
 	size_t width, height, mines, turn;
+	int opened;
 	bool isGenerated;
 	
 	std :: vector<std :: vector<int> > field;
@@ -50,12 +51,15 @@ private:
 	
 public:
 	
+	t_field getPicture();
+	
 	Minesweeper ();
 	
 	void startGame(size_t, size_t, size_t);
-	std :: vector<t_cell> makeMove(t_cell);
+	int makeMove(t_cell);
 	
 	void printField();
+	void printPicture(std :: ostream& = std :: cout);
 	
 };
 
