@@ -45,7 +45,7 @@ std :: pair<bool, std :: pair<t_cells_list, t_cells_list> > determine (t_field f
 	{
 		anyChanges = false;
 		for (t_coord i = 0; i < n; i++)
-			for (t_coord j = 0; j < n; j++)
+			for (t_coord j = 0; j < m; j++)
 				if (field[i][j] >= 0)
 				{
 					auto t = getFreeNearby(field, i, j);
